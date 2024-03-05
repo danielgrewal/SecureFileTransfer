@@ -20,10 +20,10 @@ def encrypt_data_with_aes(key, data):
     return cipher_aes.iv + ct_bytes
 
 def decrypt_data_with_aes(key, data):
-    iv = data[:AES.block_size]
-    ct = data[AES.block_size:]
+    iv = data[:AES.block_size]  # initialization vector
+    ct = data[AES.block_size:]  # cipher text
     cipher_aes = AES.new(key, AES.MODE_CBC, iv)
-    pt = unpad(cipher_aes.decrypt(ct), AES.block_size)
+    pt = unpad(cipher_aes.decrypt(ct), AES.block_size)  # plaintext
     print("Data decrypted with AES.")
     return pt
 
