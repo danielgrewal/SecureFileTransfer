@@ -33,3 +33,4 @@ Follow the prompts in the console to authenticate with the key server, and choos
 
 The application uses self-signed SSL certificates for HTTPS communication in development. For production environments, use certificates signed by a trusted Certificate Authority (CA).
 The verify=False parameter is used in the client's requests.post call for simplicity in development and testing. This disables SSL certificate verification and is not recommended for production use. Ensure proper certificate verification in production environments.
+This needs to be updated.
