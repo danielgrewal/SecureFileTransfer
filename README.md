@@ -1,28 +1,35 @@
 # SOFE4840 Final Project - Secure File Transfer System
 
-This Python program enables secure file transfer between a sender and a receiver using RSA for key exchange and AES-256 for encryption of the actual file data. The program dynamically generates RSA keys for each session, ensuring secure key exchange over an insecure channel, and then uses AES-256 to securely encrypt the file data being transferred.
-(NOTE: more to be added with server authentication component)
+This application demonstrates secure file transfer using a key server for AES key distribution, a client that can act as either a sender or receiver, and ZeroMQ with CurveZMQ for encrypted communication. The key server provides AES keys to authenticated clients, which then use these keys to encrypt and decrypt files during transfer.
 
-## Features
-
-- **RSA Key Exchange**: Securely exchanges AES keys using RSA encryption to ensure that file transfers are secure even over public networks.
-- **AES-256 Encryption**: Utilizes AES-256 encryption to secure file data during transfer, providing a high level of security.
-- **Dynamic Key Generation**: RSA keys are generated dynamically for each session, enhancing security by ensuring that keys are not reused across sessions.
-- **(NOTE: more to be added with server authentication component)**
-
-## Requirements
+## Prerequisites
 
 - Python 3.6 or higher
-- PyCryptodome library
+- Flask: For the key server's web interface
+- PyZMQ: For messaging between the client and server
+- PyCryptodome: For AES encryption and decryption
+- Requests: For HTTP requests from the client to the key server
+- OpenSSL: For generating self-signed certificates (development/testing)
 
 ## Installation
 
-To use this program, you need to have Python installed on your machine. If you haven't already, download and install Python from [python.org](https://www.python.org/).
+First, ensure you have Python installed on your machine. Then, install the required libraries using pip:
 
-Then, install the required PyCryptodome library using pip:
+pip install flask pyzmq pycryptodome requests
 
-pip install pycryptodome
+## Running the Application
 
-## Usage
+### Key Server
 
-Run main.py and select either sender or receiver mode. (add more when server component is added)
+Run the key server using server.py
+The server will start, and a self-signed SSL certificate will be generated if it doesn't already exist.
+
+### Client
+
+Run the client using client.py in a seperate terminal (or use another instance of python debugger).
+Follow the prompts in the console to authenticate with the key server, and choose whether to send or receive a file.
+
+## Security Notes
+
+The application uses self-signed SSL certificates for HTTPS communication in development. For production environments, use certificates signed by a trusted Certificate Authority (CA).
+The verify=False parameter is used in the client's requests.post call for simplicity in development and testing. This disables SSL certificate verification and is not recommended for production use. Ensure proper certificate verification in production environments.
