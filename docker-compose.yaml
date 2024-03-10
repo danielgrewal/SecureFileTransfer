@@ -1,0 +1,32 @@
+version: '3.9'
+
+services:
+  sft_db:
+    image: mysql:latest
+    environment:
+      MYSQL_DATABASE: sftdb  
+      MYSQL_ROOT_PASSWORD: rootpass  
+    ports:
+      - "3306:3306"
+    networks:
+      - sft_network
+    volumes:
+      - sft_volume:/var/lib/mysql   
+
+  sft_server:
+    build:
+      context: ./src/server
+      dockerfile: Dockerfile
+    ports:
+      - "443:443"
+    networks:
+      - sft_network
+    volumes:
+      - ./src/server:/app   
+
+volumes:
+  sft_volume:
+
+networks:
+  sft_network:
+    driver: bridge

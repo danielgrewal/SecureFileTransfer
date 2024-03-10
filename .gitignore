@@ -1,2 +1,2 @@
-# ignore .pem files (certs)
-*.pem
+**/__pycache__
+**/certificates
