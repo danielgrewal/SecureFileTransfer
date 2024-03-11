@@ -5,6 +5,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
+from database import Database
 
 TOKEN_URL = "/authenticate"
 TOKEN_EXPIRE_MIN = 60
@@ -26,12 +27,17 @@ class User(BaseModel):
     password_hash: str
 
 def get_user(username: str, password: str):
+    db = Database()
+    db.connect()
+    params = (username,)
+    result = db.query("select username, password_hash from users where users.username = %s;", params)
     
-    user = User(username = username, password_hash = password)
-    # if not user:
-    #     return False
-    # if not verify_password(password, user.hashed_password):
-    #     return False
+    if not result:
+        return False
+    if not verify_password(password, result[0][1]):
+        return False
+    
+    user = User(username = result[0][0], password_hash = result[0][1])
     return user
 
 
@@ -55,7 +61,7 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> T
     if not user:
         raise HTTPException(
             status_code = status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
+            detail="Invalid authentication credentials.",
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token = create_token(data = { "sub": user.username })

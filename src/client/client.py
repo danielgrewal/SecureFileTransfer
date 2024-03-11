@@ -15,16 +15,15 @@ def authenticate(username, password):
     print("Sending authentication request to key server...")
     data = { "username": username, "password": password }
     response = requests.post(f'{SERVER_URL_BASE}/{AUTH_ENDPOINT}', data=data, verify=False, timeout=5)
-    print(response.text)
-    # verify=False disabled trusted CA check. For dev/testing we are using self signed cert
+    
+    # Verify=False disabled trusted CA check. For dev/testing we are using self signed cert
     # timeout is used so the client does not hang if no response from server, set to 5 seconds
-    # if response.status_code == 200:
-    #     data = response.json()
-    #     print("Authenticated successfully. AES key received.")
-    #     return bytes.fromhex(data['aes_key'])
-    # else:
-    #     print("Authentication failed.")
-    #     exit()
+    if response.status_code == 200:
+        data = response.json()
+        print(data)
+    else:
+        print(data.get("detail"))
+        exit()
 
 
 def encrypt_data_with_aes(aes_key, data):
