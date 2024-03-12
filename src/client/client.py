@@ -11,19 +11,19 @@ SERVER_URL_BASE = "https://localhost"
 AUTH_ENDPOINT = "authenticate"
 
 def authenticate(username, password):
-
     print("Sending authentication request to key server...")
     data = { "username": username, "password": password }
-    response = requests.post(f'{SERVER_URL_BASE}/{AUTH_ENDPOINT}', data=data, verify=False, timeout=5)
+    response = requests.post(f'{SERVER_URL_BASE}/{AUTH_ENDPOINT}', data=data, verify=False)
     
     # Verify=False disabled trusted CA check. For dev/testing we are using self signed cert
     # timeout is used so the client does not hang if no response from server, set to 5 seconds
     if response.status_code == 200:
-        data = response.json()
-        print(data)
+        print("Authenticated!")
+        access_token = response.json().get("access_token")
+        return access_token
     else:
-        print(data.get("detail"))
-        exit()
+        print(response.json().get("detail"))
+        return None
 
 
 def encrypt_data_with_aes(aes_key, data):
@@ -78,11 +78,36 @@ def receive_file(output_file, aes_key, zmq_port):
     socket.close()
     context.term()
 
+def get(endpoint: str, headers:str = None):
+    return requests.get(f'{SERVER_URL_BASE}{endpoint}', headers=headers, verify=False)
+
 
 def main():
     username = input("Enter username: ")
     password = input("Enter password: ")
-    bearer_token = authenticate(username, password)
+    # Authenticate user
+    access_token = authenticate(username, password)
+    if not access_token:
+        exit()
+
+    # Set bearer token in the header
+    headers = { "Accept": "application/json", "Authorization": f"Bearer {access_token}" }
+    
+    # Check if user has any outstanding connection requests
+    # 
+
+    # Prompt user for username of connecting party (responder)
+    responder = input("Request connection with (username): ")
+
+
+    
+    
+    
+    resp = requests.get(f'{SERVER_URL_BASE}/items', headers=headers, verify=False)
+    print(resp.json())
+
+
+
 
 
     # mode = input("Do you want to send or receive a file? (send/receive): ")
