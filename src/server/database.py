@@ -23,7 +23,7 @@ class Database:
         except:
             print("Unable to connect to DB!")
 
-    def query(self, query, params=None):
+    def query(self, query: str, params=None):
         cursor = self.connection.cursor()
         result = None
         try:
@@ -32,6 +32,20 @@ class Database:
             return result
         except:
             print("Unable to query DB!")
+
+    def callproc(self, proc_name:str, params=None):
+        cursor = self.connection.cursor()
+        result = None
+        try:
+            results = []
+            cursor.callproc(proc_name, params)
+            for result in cursor.stored_results():
+                row = result.fetchall()
+                results.append(row)
+                
+            return results[0]
+        except:
+            print("Unable to run stored procedure!")
     
     def disconnect(self):
         if self.connection:

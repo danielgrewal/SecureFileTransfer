@@ -1,11 +1,10 @@
 from pydantic import BaseModel
+from database import Database
 
 class Session(BaseModel):
     session_id: int
     username_initiator: str
     username_responder: str
-    public_key_initiator: str
-    public_key_responder: str | None = None
     role_initiator: str
     address_initiator: str
     port_initiator: int
@@ -14,4 +13,11 @@ class Session(BaseModel):
     created_on: str | None = None
     completed_on: str | None = None
 
-    
+
+def get_outstanding_sessions(username: str):
+    db = Database()
+    db.connect()
+    params = (username,)
+    result = db.callproc('get_outstanding_requests', params)
+    db.disconnect()
+    return result[0][0]

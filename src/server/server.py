@@ -1,11 +1,12 @@
 from datetime import datetime, timezone, timedelta
 from typing import Annotated
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 from database import Database
+from session import *
 
 TOKEN_URL = "/authenticate"
 TOKEN_EXPIRE_MIN = 60
@@ -83,8 +84,12 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> T
         return Token(access_token=access_token, token_type="bearer")
 
 @app.get("/sessions/")
-async def check_sessions(token:str = Depends(oauth2_scheme)):
-    
+async def check_sessions(request: Request, token:str = Depends(oauth2_scheme)):
     username = extract_username(token)
-
-    return {"protected_data": username}
+    if not username:
+        raise HTTPException(
+            status_code = status.HTTP_400_BAD_REQUEST,
+            detail="Invalid access token."
+        )
+    sessions = get_outstanding_sessions(username)
+    return { "sessions": sessions } 

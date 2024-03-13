@@ -78,9 +78,6 @@ def receive_file(output_file, aes_key, zmq_port):
     socket.close()
     context.term()
 
-def get(endpoint: str, headers:str = None):
-    return requests.get(f'{SERVER_URL_BASE}{endpoint}', headers=headers, verify=False)
-
 
 def main():
     username = input("Enter username: ")
@@ -94,17 +91,17 @@ def main():
     headers = { "Accept": "application/json", "Authorization": f"Bearer {access_token}" }
     
     # Check if user has any outstanding connection requests
-    # 
+    response = requests.get(f'{SERVER_URL_BASE}/sessions', headers=headers, verify=False)
+    outstanding_requests = response.json().get('sessions')
+    print(f"You have {outstanding_requests} outstanding invite(s). \n")
 
     # Prompt user for username of connecting party (responder)
-    responder = input("Request connection with (username): ")
-
-
+    responder_username = input("Request connection with (username): ")
+    response = requests.get(f'{SERVER_URL_BASE}/sessions', headers=headers, verify=False)
     
     
-    
-    resp = requests.get(f'{SERVER_URL_BASE}/items', headers=headers, verify=False)
-    print(resp.json())
+    # resp = requests.get(f'{SERVER_URL_BASE}/sessions', headers=headers, verify=False)
+    # print(resp.json())
 
 
 

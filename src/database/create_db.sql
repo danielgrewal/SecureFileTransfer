@@ -15,8 +15,6 @@ CREATE TABLE IF NOT EXISTS sessions (
 	session_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     username_initiator VARCHAR(256) NOT NULL,
     username_responder VARCHAR(256) NOT NULL,
-    public_key_initiator VARCHAR(256) NOT NULL,
-    public_key_responder VARCHAR(256) NULL,
     role_initiator VARCHAR(10) NOT NULL,
     address_initiator VARCHAR(12) NOT NULL,
     port_initiator SMALLINT NOT NULL,
@@ -38,4 +36,14 @@ begin
 	select username, password_hash from users where users.username = username;
 end //
 
+create procedure get_outstanding_requests (
+	in username varchar(256)
+)
+begin
+	select count(*) from sessions 
+    where sessions.username_responder = username
+    and sessions.completed_on is null;
+end //
+
 delimiter ;
+
