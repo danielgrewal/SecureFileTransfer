@@ -1,3 +1,4 @@
+import base64
 import requests
 import zmq
 from Crypto.Cipher import AES
@@ -24,7 +25,22 @@ def authenticate(username, password):
     else:
         print(response.json().get("detail"))
         return None
+    
+def is_valid_responder(username:str, headers):
+    response = requests.post(f'{SERVER_URL_BASE}/validateuser', json = {"username": username}, headers=headers, verify=False)
+    if response.status_code == 200:
+        return True
+    else:
+        print(response.json().get("detail"))
+        return False
 
+def start_session(responder_username:str, choice:str, port:str, headers):
+    connection_details = {'responder': responder_username, 'role': choice, 'port': port }
+    response = requests.post(f'{SERVER_URL_BASE}/startsession', json = connection_details, headers=headers, verify=False)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return None
 
 def encrypt_data_with_aes(aes_key, data):
     print("Encrypting data with AES...")
@@ -65,6 +81,7 @@ def receive_file(output_file, aes_key, zmq_port):
 
     print("Waiting to receive file...")
     data = socket.recv()
+    
     iv, encrypted_data = data[:16], data[16:]  # Extract IV and encrypted data
     # Print received encrypted data in hex format
     print(f"Encrypted data received: {encrypted_data.hex()}")
@@ -79,6 +96,8 @@ def receive_file(output_file, aes_key, zmq_port):
     context.term()
 
 
+
+    
 def main():
     username = input("Enter username: ")
     password = input("Enter password: ")
@@ -94,16 +113,52 @@ def main():
     response = requests.get(f'{SERVER_URL_BASE}/sessions', headers=headers, verify=False)
     outstanding_requests = response.json().get('sessions')
     print(f"You have {outstanding_requests} outstanding invite(s). \n")
+    
+    # User has no outstanding requests to connect. User can initiate an invite.
+    if outstanding_requests == 0:
+        while True:
+            # Prompt user for username of connecting party (responder)
+            responder_username = input("Request connection with (username): ")
+            if is_valid_responder(responder_username, headers):
+                break
 
-    # Prompt user for username of connecting party (responder)
-    responder_username = input("Request connection with (username): ")
-    response = requests.get(f'{SERVER_URL_BASE}/sessions', headers=headers, verify=False)
+        while True:
+            print("Would you like to send or receive an encrypted file? Choose 1 or 2")
+            print("1. I am the sender.")
+            print("2. I am the receiver.")
+            choice = input()
+            if choice == '1' or choice == '2':
+                break
+            else:
+                print("You have entered an invalid option.\n")
+        
+        while True:
+            port = input("Port Responder will connect to: ")
+            if port.isnumeric():
+                break
+        
+        session = start_session(responder_username, choice, port, headers)
+        print(session.get("aes_key"))
+        aes_key = base64.b64decode(session.get("aes_key"))
+
+        # If the user is the sender
+        if choice == "1":
+            file_path = input("Enter the file path: ")
+            send_file(file_path, aes_key, None, port)
+
+        # User is the receiver
+        else:
+            output_file = input("Enter the output file name: ")
+            receive_file(output_file, aes_key, port)
+    
+        
+            
+    # User has outstanding invites.            
+    else:
+        
+        
     
     
-    # resp = requests.get(f'{SERVER_URL_BASE}/sessions', headers=headers, verify=False)
-    # print(resp.json())
-
-
 
 
 

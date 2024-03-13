@@ -4,9 +4,12 @@ from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
+from Crypto.Random import get_random_bytes
 from pydantic import BaseModel
 from database import Database
 from session import *
+import base64
+
 
 TOKEN_URL = "/authenticate"
 TOKEN_EXPIRE_MIN = 60
@@ -93,3 +96,54 @@ async def check_sessions(request: Request, token:str = Depends(oauth2_scheme)):
         )
     sessions = get_outstanding_sessions(username)
     return { "sessions": sessions } 
+
+@app.post("/validateuser/")
+async def validate_user(request:Request, token:str = Depends(oauth2_scheme)):
+    request_body = await request.json()
+    sending_user = extract_username(token)
+    if sending_user == request_body.get('username'):
+        raise HTTPException(
+            status_code = status.HTTP_400_BAD_REQUEST,
+            detail="Error: Initiator and Responder cannot be the same user."
+        )
+    user = get_user(request_body.get('username'))
+    if not user:
+        raise HTTPException(
+            status_code = status.HTTP_404_NOT_FOUND,
+            detail="Username was not found."
+        )
+    return { "username": user.username } 
+
+@app.post("/startsession/")
+async def start_session(request:Request, token:str = Depends(oauth2_scheme)):
+    request_body = await request.json()
+
+    username_initiator = extract_username(token)
+    username_responder = request_body.get('responder')
+    role_initiator = request_body.get('role')
+    address_initiator = request.client.host
+    port_initiator = request_body.get('port')
+    aes_key = get_random_bytes(32)  # Generate AES-256 key
+    params = (username_initiator, username_responder, role_initiator, address_initiator, port_initiator, aes_key)
+    session = create_session(params)
+    print(session)
+    return {"session_id": session[0], "aes_key": base64.b64encode(session[6]).decode('utf-8')}
+
+@app.post("/joinsession/")
+async def join_session(request:Request, token:str = Depends(oauth2_scheme)):
+    request_body = await request.json()
+
+    username_initiator = extract_username(token)
+    username_responder = request_body.get('responder')
+    role_initiator = request_body.get('role')
+    address_initiator = request.client.host
+    port_initiator = request_body.get('port')
+    aes_key = get_random_bytes(32)  # Generate AES-256 key
+    params = (username_initiator, username_responder, role_initiator, address_initiator, port_initiator, aes_key)
+    session = create_session(params)
+    print(session)
+    return {"session_id": session[0], "aes_key": base64.b64encode(session[6]).decode('utf-8')}
+
+
+
+

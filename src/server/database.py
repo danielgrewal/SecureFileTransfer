@@ -42,7 +42,8 @@ class Database:
             for result in cursor.stored_results():
                 row = result.fetchall()
                 results.append(row)
-                
+            
+            self.connection.commit()    
             return results[0]
         except:
             print("Unable to run stored procedure!")
