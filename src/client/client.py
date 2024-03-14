@@ -41,6 +41,11 @@ def start_session(responder_username:str, choice:str, port:str, headers):
         return response.json()
     else:
         return None
+
+def close_session(session_id:str, headers):
+    response = requests.post(f'{SERVER_URL_BASE}/endsession',json={"session_id": session_id}, headers=headers, verify=False)
+    return(response.json().get("status") == "Success")
+    
     
 def accept_invite(headers):
     response = requests.get(f'{SERVER_URL_BASE}/joinsession', headers=headers, verify=False)
@@ -194,8 +199,13 @@ def main():
             file_path = input("Enter the file path (to send): ")
             send_file(file_path, aes_key, address, port)
         
-        # File successfully sent/received. Close the open invite.
-        
+        # File successfully sent/received. Close the open session.
+        session_closed = close_session(session_id, headers)
+
+        if session_closed:
+            print(f"Session {session_id} completed successfully.")
+        else:
+            print(f"Unable to close session {session_id}")
         
 
 

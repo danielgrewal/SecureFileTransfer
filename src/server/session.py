@@ -24,3 +24,12 @@ def get_first_invite(username):
     result = db.callproc('get_open_invite', params)
     db.disconnect()
     return result[0]
+
+def close_session(session_id):
+    db = Database()
+    db.connect()
+    params = (session_id,)
+    result = db.callproc('end_session', params)
+    
+    db.disconnect()
+    return result[0]
