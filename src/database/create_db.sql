@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS sessions (
     completed_on DATETIME NULL
 ) Engine=InnoDB;
 
-SET time_zone = '-05:00';
+SET GLOBAL time_zone = '-04:00';
 
 -- Create stored procedures
 delimiter //
@@ -57,6 +57,24 @@ begin
     values(username_initiator, username_responder, role_initiator, address_initiator, port_initiator, aes_key);
     
     select * from sessions where session_id = LAST_INSERT_ID();
+end //
+
+create procedure get_open_invite (
+	in username VARCHAR(256)
+)
+begin
+	select * from sessions 
+    where username_responder = username and completed_on is null
+    order by created_on;
+end //
+
+create procedure end_session (
+	in session_id INT
+)
+begin
+	update sessions
+    set completed_on = NOW()
+    where sessions.session_id = session_id;
 end //
 
 delimiter ;

@@ -126,23 +126,28 @@ async def start_session(request:Request, token:str = Depends(oauth2_scheme)):
     aes_key = get_random_bytes(32)  # Generate AES-256 key
     params = (username_initiator, username_responder, role_initiator, address_initiator, port_initiator, aes_key)
     session = create_session(params)
-    print(session)
     return {"session_id": session[0], "aes_key": base64.b64encode(session[6]).decode('utf-8')}
 
-@app.post("/joinsession/")
-async def join_session(request:Request, token:str = Depends(oauth2_scheme)):
-    request_body = await request.json()
+@app.get("/joinsession/")
+async def join_session(token:str = Depends(oauth2_scheme)):
+    username_responder = extract_username(token)
+    result = get_first_invite(username_responder)
+    session_id = result[0]
+    username_initiator = result[1]
+    role_initiator = result[3]
+    address = result[4]
+    port = result[5] 
+    aes_key = base64.b64encode(result[6]).decode('utf-8')
 
-    username_initiator = extract_username(token)
-    username_responder = request_body.get('responder')
-    role_initiator = request_body.get('role')
-    address_initiator = request.client.host
-    port_initiator = request_body.get('port')
-    aes_key = get_random_bytes(32)  # Generate AES-256 key
-    params = (username_initiator, username_responder, role_initiator, address_initiator, port_initiator, aes_key)
-    session = create_session(params)
-    print(session)
-    return {"session_id": session[0], "aes_key": base64.b64encode(session[6]).decode('utf-8')}
+    return {
+        "session_id": session_id,
+        "username_initiator": username_initiator,
+        "role_initiator": role_initiator,
+        "address": address,
+        "port": port,
+        "aes_key": aes_key
+    }
+
 
 
 

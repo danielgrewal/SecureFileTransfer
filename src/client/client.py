@@ -41,6 +41,10 @@ def start_session(responder_username:str, choice:str, port:str, headers):
         return response.json()
     else:
         return None
+    
+def accept_invite(headers):
+    response = requests.get(f'{SERVER_URL_BASE}/joinsession', headers=headers, verify=False)
+    return(response.json())
 
 def encrypt_data_with_aes(aes_key, data):
     print("Encrypting data with AES...")
@@ -54,34 +58,54 @@ def decrypt_data_with_aes(aes_key, iv, data):
     return unpad(cipher_aes.decrypt(data), AES.block_size)
 
 
-def send_file(file_path, aes_key, zmq_ip, zmq_port):
-    print("Initializing ZeroMQ PUSH socket...")
-    context = zmq.Context()
-    socket = context.socket(zmq.PUSH)
-    socket.connect(f"tcp://{zmq_ip}:{zmq_port}")
+def send_file(file_path, aes_key, address, zmq_port):
+    
+    # Caller is the initiating user
+    if not address:
+        print("Initializing ZeroMQ PUSH socket...")
+        context = zmq.Context()
+        socket = context.socket(zmq.PUSH)
+        socket.bind(f"tcp://*:{zmq_port}")
+        
+    # Caller is the responding user
+    else:
+        print("Initializing ZeroMQ PUSH socket...")
+        context = zmq.Context()
+        socket = context.socket(zmq.PUSH)
+        socket.connect(f"tcp://{address}:{zmq_port}")
 
-    print(f"Reading and encrypting file: {file_path}")
+    print(f"Reading file: {file_path}")
     with open(file_path, 'rb') as file:
         data = file.read()
         encrypted_data, iv = encrypt_data_with_aes(aes_key, data)
+        print("Waiting to send file...")
         socket.send(iv + encrypted_data)  # Prepend IV for decryption
         # Print encrypted data in hex format
         print(f"Encrypted data sent: {encrypted_data.hex()}")
-
+    
     print("File sent successfully.")
     socket.close()
     context.term()
 
 
-def receive_file(output_file, aes_key, zmq_port):
-    print("Initializing ZeroMQ PULL socket...")
-    context = zmq.Context()
-    socket = context.socket(zmq.PULL)
-    socket.bind(f"tcp://*:{zmq_port}")
-
-    print("Waiting to receive file...")
-    data = socket.recv()
+def receive_file(output_file, aes_key, address, zmq_port):
     
+    # Caller is the initiating user
+    if not address:
+        print("Initializing ZeroMQ PULL socket...")
+        context = zmq.Context()
+        socket = context.socket(zmq.PULL)
+        socket.bind(f"tcp://*:{zmq_port}")
+        print("Waiting to receive file...")
+        
+    # Caller is the responding user
+    else:
+        print("Initializing ZeroMQ PUSH socket...")
+        context = zmq.Context()
+        socket = context.socket(zmq.PULL)
+        socket.connect(f"tcp://{address}:{zmq_port}")
+        
+    data = socket.recv()
     iv, encrypted_data = data[:16], data[16:]  # Extract IV and encrypted data
     # Print received encrypted data in hex format
     print(f"Encrypted data received: {encrypted_data.hex()}")
@@ -94,8 +118,6 @@ def receive_file(output_file, aes_key, zmq_port):
     print("File received and decrypted successfully.")
     socket.close()
     context.term()
-
-
 
     
 def main():
@@ -138,40 +160,43 @@ def main():
                 break
         
         session = start_session(responder_username, choice, port, headers)
-        print(session.get("aes_key"))
         aes_key = base64.b64decode(session.get("aes_key"))
 
         # If the user is the sender
         if choice == "1":
-            file_path = input("Enter the file path: ")
+            file_path = input("Enter the file path (to send): ")
             send_file(file_path, aes_key, None, port)
 
         # User is the receiver
         else:
-            output_file = input("Enter the output file name: ")
-            receive_file(output_file, aes_key, port)
+            output_file = input("Enter the output file path (to receive): ")
+            receive_file(output_file, aes_key, None, port)
     
         
-            
     # User has outstanding invites.            
     else:
+        session = accept_invite(headers)
+        
+        session_id = session.get('session_id')
+        username_initiator = session.get('username_initiator')
+        role_initiator = session.get('role_initiator')
+        address = 'localhost' # all local clients will be localhost
+        port = session.get('port')
+        aes_key = base64.b64decode(session.get("aes_key"))
+
+        # If the initiating user is the sender, receive file.
+        if role_initiator == "1":
+            output_file = input("Enter the output file path (to receive): ")
+            receive_file(output_file, aes_key, address, port)
+            
+        # If the initiating user is the receiver, send file.
+        else:
+            file_path = input("Enter the file path (to send): ")
+            send_file(file_path, aes_key, address, port)
+        
+        # File successfully sent/received. Close the open invite.
         
         
-    
-    
-
-
-
-    # mode = input("Do you want to send or receive a file? (send/receive): ")
-    # if mode == "send":
-    #     file_path = input("Enter the file path: ")
-    #     zmq_ip = input("Enter the receiver's IP address: ")
-    #     zmq_port = input("Enter the receiver's ZMQ port: ")
-    #     send_file(file_path, aes_key, zmq_ip, zmq_port)
-    # elif mode == "receive":
-    #     output_file = input("Enter the output file name: ")
-    #     zmq_port = input("Enter the ZMQ port to listen on: ")
-    #     receive_file(output_file, aes_key, zmq_port)
 
 
 if __name__ == "__main__":

@@ -16,3 +16,11 @@ def create_session(params):
     result = db.callproc('create_session', params)
     db.disconnect()
     return result[0]
+
+def get_first_invite(username):
+    db = Database()
+    db.connect()
+    params = (username,)
+    result = db.callproc('get_open_invite', params)
+    db.disconnect()
+    return result[0]
