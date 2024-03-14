@@ -8,21 +8,24 @@ The “Secure File Sharing System” utilizes a design that focuses on security,
 
 - Python 3.6+
 - Docker
-- OpenSSL
+- OpenSSL (if you want to generate your own certificates, you can use the provided certificate files for development/testing purposes)
 
 ## Dependencies
 
 ### Client:
 
-`Flask==3.0.2
+```
+Flask==3.0.2
 pyzmq==25.1.1
 Requests==2.31.0
 urllib3==2.2.1
-pycryptodome==3.20.0`
+pycryptodome==3.20.0
+```
 
 ### Server:
 
-`bcrypt==4.0.1
+```
+bcrypt==4.0.1
 fastapi==0.110.0
 mysql-connector-python==8.3.0
 passlib[bcrypt]==1.7.4
@@ -30,9 +33,10 @@ pycryptodome==3.20.0
 python-jose[cryptography]==3.3.0
 pydantic==2.6.3
 python-multipart==0.0.9
-uvicorn==0.28.0`
+uvicorn==0.28.0
+```
 
-Refer to `"requirements.txt"` in the `src/client` and `src/server` folders for your environment setup.
+Refer to `requirements.txt` in the `src/client` and `src/server` folders for your environment setup.
 
 ## Running the Application
 
