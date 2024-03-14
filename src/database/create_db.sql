@@ -75,6 +75,13 @@ begin
 	update sessions
     set completed_on = NOW()
     where sessions.session_id = session_id;
+    
+    IF ROW_COUNT() > 0 THEN
+        SELECT 'Success' AS Status;
+    ELSE
+        SELECT 'Failure' AS Status;
+    END IF;
+    
 end //
 
 delimiter ;
