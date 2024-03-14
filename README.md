@@ -23,7 +23,6 @@ This implementation provides a secure, authenticated and direct file exchange be
 ### Client:
 
 ```
-Flask==3.0.2
 pyzmq==25.1.1
 Requests==2.31.0
 urllib3==2.2.1
