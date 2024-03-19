@@ -1,5 +1,5 @@
 import pytest
-import src.client.client
+from src.client.client import *
 
 def test_invalid_creds():
     """Tests that authentication fails with invalid credentials and that an appropirate error message is displayed."""
