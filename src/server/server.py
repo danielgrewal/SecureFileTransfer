@@ -153,5 +153,3 @@ async def end_session(request:Request, token:str = Depends(oauth2_scheme)):
     request_body = await request.json()
     result = close_session(request_body.get("session_id"))
     return {"status": result[0]}
-
-
