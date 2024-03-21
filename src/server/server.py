@@ -101,6 +101,11 @@ async def check_sessions(request: Request, token:str = Depends(oauth2_scheme)):
 async def validate_user(request:Request, token:str = Depends(oauth2_scheme)):
     request_body = await request.json()
     sending_user = extract_username(token)
+    if get_user(sending_user) is False:
+        raise HTTPException(
+            status_code = status.HTTP_400_BAD_REQUEST,
+            detail="Error: Bad bearer token."
+        )
     if sending_user == request_body.get('username'):
         raise HTTPException(
             status_code = status.HTTP_400_BAD_REQUEST,
@@ -150,6 +155,12 @@ async def join_session(token:str = Depends(oauth2_scheme)):
 
 @app.post("/endsession/")
 async def end_session(request:Request, token:str = Depends(oauth2_scheme)):
-    request_body = await request.json()
-    result = close_session(request_body.get("session_id"))
-    return {"status": result[0]}
+    username = extract_username(token)
+
+    if get_user(username) is not False:
+        request_body = await request.json()
+        result = close_session(request_body.get("session_id"))
+        return {"status": result[0]}
+
+    else:
+        return {"status": "Failed to find user from token."}
