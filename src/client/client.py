@@ -22,11 +22,11 @@ def authenticate(username, password):
     if response.status_code == 200:
         print("Authenticated!")
         access_token = response.json().get("access_token")
-        return access_token, None
+        return access_token
     else:
         errorMsg = response.json().get("detail")
         print(errorMsg)
-        return None, errorMsg
+        return None
 
 
 def calculate_crc(data):

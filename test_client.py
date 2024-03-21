@@ -7,25 +7,22 @@ async def async_authenticate(username, password): # async wrapper
     return client.authenticate(username, password)
 
 @pytest.mark.asyncio
-async def test_invalid_auth():
+async def test_valid_auth():
 
     username = "angad"
     password = "newpass"
 
     try:
         # Attempt to authenticate with provided credentials
-        access_token, errorMsg = await async_authenticate(username, password)
-
-        if access_token is not None:
-            print("\nAuthentication successful!")
-            print("Access Token: ", access_token)
+        result = await async_authenticate(username, password)
+        assert result is not None
 
     except Exception as e:
         # Assert the error message indicates invalid credentials
         assert "Invalid authentication credentials." in str(e)
 
 @pytest.mark.asyncio
-async def test_valid_auth():
+async def test_invalid_auth():
 
     """Tests that authentication fails with invalid credentials and that an appropriate error message is displayed."""
     
@@ -36,7 +33,8 @@ async def test_valid_auth():
 
     try:
         # Attempt to authenticate with provided credentials
-        access_token, errorMsg = await async_authenticate(username, password)
+        result = await async_authenticate(username, password)
+        assert result is None
 
     except Exception as e:
         # Assert the error message indicates invalid credentials
@@ -45,44 +43,71 @@ async def test_valid_auth():
 @pytest.mark.asyncio
 async def test_valid_verification():
 
-  username = "usman"
-  password = "mypass"  
+  username_initiator = "usman"
+  password_initiator = "mypass"
 
-  access_token = await async_authenticate(username, password)
+  username_responder = "daniel" 
+
+  access_token = await async_authenticate(username_initiator, password_initiator)
 
   headers = {"Accept": "application/json",
                "Authorization": f"Bearer {access_token}"}
 
-  assert client.is_valid_responder(username, headers) is True
+  assert client.is_valid_responder(username_responder, headers) is True
 
 @pytest.mark.asyncio
-async def test_invalid_verification():
+async def test_invalid_verification1():
 
-  username = "usman"  
-
-  access_token = uuid4() # generating fake token
+  username_responder = "angad" 
   
+  access_token = uuid4() # generating fake token
+
   headers = {"Accept": "application/json",
                "Authorization": f"Bearer {access_token}"}
 
-  assert client.is_valid_responder(username, headers) is False
+  assert client.is_valid_responder(username_responder, headers) is False
+
+@pytest.mark.asyncio
+async def test_invalid_verification2():
+
+  username_initiator = "usman"
+  password_initiator = "mypass"
+
+  username_responder = "admin" 
+
+  access_token = await async_authenticate(username_initiator, password_initiator)
+
+  headers = {"Accept": "application/json",
+               "Authorization": f"Bearer {access_token}"}
+
+  assert client.is_valid_responder(username_responder, headers) is False
+
+@pytest.mark.asyncio
+async def test_invalid_verification3():
+
+  username_initiator = "usman"
+  password_initiator = "mypass"
+
+  username_responder = "usman" 
+
+  access_token = await async_authenticate(username_initiator, password_initiator)
+
+  headers = {"Accept": "application/json",
+               "Authorization": f"Bearer {access_token}"}
+
+  assert client.is_valid_responder(username_responder, headers) is False
 
 @pytest.mark.asyncio
 async def test_invalid_startSession():
 
-    username = "admin"  
-    password = "root"
-
-    access_token = await async_authenticate(username, password) # get token
+    access_token = uuid4() # generating fake token
 
     headers = {"Accept": "application/json",
                 "Authorization": f"Bearer {access_token}"}
 
     result = client.start_session("angad", 2, 8888, headers)
 
-    return access_token, result
-
-    assert result is not None
+    assert result is None
 
 @pytest.mark.asyncio
 async def test_invalid_endSesson():
@@ -100,3 +125,12 @@ async def test_invalid_endSesson():
             break
     
     assert flag is False # unauthorized user cannot end a session
+
+@pytest.mark.asyncio
+async def test_auth_sqlInjection():
+
+    username = "angad' # "
+    password = ""
+
+    access_token = await async_authenticate(username, password)
+    assert access_token is None
