@@ -12,9 +12,6 @@ urllib3.disable_warnings(InsecureRequestWarning)
 SERVER_URL_BASE = "https://localhost"
 AUTH_ENDPOINT = "authenticate"
 
-#TEST Variables
-errorMsg = ""
-
 def authenticate(username, password):
     print("Sending authentication request to key server...")
     data = {"username": username, "password": password}
@@ -25,11 +22,11 @@ def authenticate(username, password):
     if response.status_code == 200:
         print("Authenticated!")
         access_token = response.json().get("access_token")
-        return access_token
+        return access_token, None
     else:
         errorMsg = response.json().get("detail")
         print(errorMsg)
-        return None
+        return None, errorMsg
 
 
 def calculate_crc(data):
