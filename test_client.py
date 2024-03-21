@@ -101,11 +101,16 @@ async def test_invalid_verification3():
 async def test_invalid_startSession():
 
     access_token = uuid4() # generating fake token
+    username = "angad"
+    port = 8888
 
     headers = {"Accept": "application/json",
                 "Authorization": f"Bearer {access_token}"}
 
-    result = client.start_session("angad", 2, 8888, headers)
+    for j in [1,2]:
+        result = client.start_session(username, j, port, headers)
+        if result is not None:
+            break
 
     assert result is None
 
