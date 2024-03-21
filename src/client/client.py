@@ -12,6 +12,8 @@ urllib3.disable_warnings(InsecureRequestWarning)
 SERVER_URL_BASE = "https://localhost"
 AUTH_ENDPOINT = "authenticate"
 
+#TEST Variables
+errorMsg = ""
 
 def authenticate(username, password):
     print("Sending authentication request to key server...")
@@ -25,7 +27,8 @@ def authenticate(username, password):
         access_token = response.json().get("access_token")
         return access_token
     else:
-        print(response.json().get("detail"))
+        errorMsg = response.json().get("detail")
+        print(errorMsg)
         return None
 
 
