@@ -121,15 +121,10 @@ async def test_invalid_endSesson():
     
     headers = {"Accept": "application/json",
                "Authorization": f"Bearer {access_token}"}
+    
+    result = client.close_session(3, headers) # session_id is known
 
-    flag = False
-    
-    for i in range(1, 100):
-        if client.close_session(i, headers) is True:
-            flag = True
-            break
-    
-    assert flag is False # unauthorized user cannot end a session
+    assert result is False # unauthorized user cannot end a session
 
 @pytest.mark.asyncio
 async def test_auth_sqlInjection():
