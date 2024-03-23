@@ -97,17 +97,39 @@ def send_file(file_path, aes_key, address, zmq_port):
     print(f"Reading file: {file_path}")
     with open(file_path, 'rb') as file:
         data = file.read()
-        # Calculate CRC value of the file data, convert to 4-byte block and prepend to the file data before sending
-        print("Calculating CRC for integrity check...")
-        crc_value = calculate_crc(data)
-        crc_data = crc_value.to_bytes(4, 'big')
-        data_with_crc = crc_data + data
-        # Encrypt the data w/ AES and get the initialization vector value
-        encrypted_data, iv = encrypt_data_with_aes(aes_key, data_with_crc)
-        print("Waiting to send file...")
-        socket.send(iv + encrypted_data)    # Prepend IV for decryption
-        print(f"Encrypted data sent: {encrypted_data.hex()}")
+    
+    # Calculate CRC value of the file data, convert to 4-byte block and prepend to the file data before sending
+    print("Calculating CRC for integrity check...")
+    crc_value = calculate_crc(data)
+    crc_data = crc_value.to_bytes(4, 'big')
+    data_with_crc = crc_data + data
 
+    # Encrypt the data w/ AES and get the initialization vector value
+    encrypted_data, iv = encrypt_data_with_aes(aes_key, data_with_crc)
+    data_with_iv = iv + encrypted_data
+    print("Waiting to send file...")
+    # Send the total size first
+    total_size = len(data_with_iv)
+    socket.send_string(f"{total_size}")
+    
+    # Split data
+    chunk_size = 1024
+    num_chunks = total_size // chunk_size
+
+    if total_size % chunk_size > 0:
+        num_chunks += 1
+    
+    for i in range(num_chunks):
+        slice_from = i * chunk_size
+        slice_to = (i + 1) * chunk_size
+        chunk = data_with_iv[slice_from:slice_to]
+        socket.send(chunk)
+
+        # Print progress
+        progress = (i + 1) / num_chunks * 100
+        print(f"\rProgress: {progress:.0f}% ", end='', flush=True)
+
+    print()
     print("File sent successfully.")
     socket.close()
     context.term()
@@ -130,9 +152,26 @@ def receive_file(output_file, aes_key, address, zmq_port):
         socket = context.socket(zmq.PULL)
         socket.connect(f"tcp://{address}:{zmq_port}")
 
-    data = socket.recv()
-    iv, encrypted_data = data[:16], data[16:]  # Extract IV and encrypted data
-    print(f"Encrypted data received: {encrypted_data.hex()}")
+ 
+    total_size = int(socket.recv().decode())
+    received_size = 0
+    data_parts = []
+
+    print("Receiving file data...")
+    while received_size < total_size:
+        chunk = socket.recv()
+        data_parts.append(chunk)
+        received_size += len(chunk)
+        progress = (received_size / total_size) * 100
+        print(f"\rProgress: {progress:.0f}% ", end='', flush=True)
+    
+    # Visual separator for next line
+    print()
+    # Join chunks together
+    data = b''.join(data_parts)
+    # Extract IV and encrypted data
+    iv, encrypted_data = data[:16], data[16:]  
+    #print(f"Encrypted data received: {encrypted_data.hex()}")
     decrypted_data_with_crc = decrypt_data_with_aes(
         aes_key, iv, encrypted_data)
 
