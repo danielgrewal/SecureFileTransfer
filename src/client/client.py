@@ -57,6 +57,7 @@ def start_session(responder_username: str, choice: str, port: str, headers):
 def close_session(session_id: str, headers):
     response = requests.post(f'{SERVER_URL_BASE}/endsession',
                              json={"session_id": session_id}, headers=headers, verify=False)
+    print(response.json().get("status"))
     return (response.json().get("status") == "Success")
 
 
