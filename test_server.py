@@ -98,7 +98,7 @@ def receive_file(output_file, aes_key, address, zmq_port):
     context.term()
     lock.release()
 
-def test_encryption():
+def encryption():
 
     user1 = "angad"
     pass1 = "newpass"
@@ -137,10 +137,3 @@ def test_encryption():
         print(f"Session #{session_id} completed successfully.")
     else:
         print(f"Unable to close session #{session_id}")
-
-
-    # send_file(file_path, aes_key, None, '8888')
-
-    # receive_file(output_file, aes_key, None, '8888')
-
-test_encryption()

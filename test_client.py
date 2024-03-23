@@ -1,5 +1,7 @@
 import pytest
 from uuid import uuid4
+
+from test_server import encryption
 from src.client import client
 
 @pytest.mark.asyncio
@@ -134,3 +136,6 @@ async def test_auth_sqlInjection():
 
     access_token = await async_authenticate(username, password)
     assert access_token is None
+
+def test_all_encryption():
+    encryption()
