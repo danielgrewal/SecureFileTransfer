@@ -9,7 +9,9 @@ CREATE TABLE IF NOT EXISTS users (
 
 insert into users (username, password_hash) values
 ('usman', '$2b$12$RrxpbbRqsrxM2fMl8MqX7eBcK69WpcL5MPfISW04Edsk7By6lWcMm'),
-('daniel', '$2b$12$Tmy8OolB.9TMNWOvFAnOoust/8NnoNHbg35GE04.QjCmUszVtKnxS');
+('daniel', '$2b$12$Tmy8OolB.9TMNWOvFAnOoust/8NnoNHbg35GE04.QjCmUszVtKnxS'),
+('angad', '$2b$12$Waw6.c5tja6Dk130PCkTRudGZN1lmF9SYlJb0Kk1lc7P1k0wzsKFe'),
+('kinjal', '$2b$12$ynQFjXWRNcC8WypXAbNuI.sexZh1fK59vnLehBTdq3bXjG8wRrOge');
 
 CREATE TABLE IF NOT EXISTS sessions (
 	session_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,

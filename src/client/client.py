@@ -12,7 +12,6 @@ urllib3.disable_warnings(InsecureRequestWarning)
 SERVER_URL_BASE = "https://localhost"
 AUTH_ENDPOINT = "authenticate"
 
-
 def authenticate(username, password):
     print("Sending authentication request to key server...")
     data = {"username": username, "password": password}
@@ -25,7 +24,8 @@ def authenticate(username, password):
         access_token = response.json().get("access_token")
         return access_token
     else:
-        print(response.json().get("detail"))
+        errorMsg = response.json().get("detail")
+        print(errorMsg)
         return None
 
 
@@ -57,6 +57,7 @@ def start_session(responder_username: str, choice: str, port: str, headers):
 def close_session(session_id: str, headers):
     response = requests.post(f'{SERVER_URL_BASE}/endsession',
                              json={"session_id": session_id}, headers=headers, verify=False)
+    print(response.json().get("status"))
     return (response.json().get("status") == "Success")
 
 
